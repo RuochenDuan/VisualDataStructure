@@ -1,5 +1,5 @@
 # views/arrlist.py
-from PyQt6.QtWidgets import QGraphicsObject
+from PyQt6.QtWidgets import QGraphicsObject, QMessageBox
 from PyQt6.QtCore import pyqtSignal, Qt, QRectF
 from PyQt6.QtGui import QColor, QPainter, QBrush, QPen, QFont
 import uuid

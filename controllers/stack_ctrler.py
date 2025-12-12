@@ -3,8 +3,8 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QInputDialog, QFileDialog, QMessageBox, QLineEdit
 from views import StackItem
 from models import Stack
-from utils import Animator
-from config import MARGIN
+from utils import Animator, DSLParser
+from config import MARGIN, DSL_help
 import json
 import re
 import os
@@ -20,6 +20,7 @@ class StackController(QObject):
         self.null_items = []
         self.popped_item = None
         self.capacity = 0
+        self.dsl_parser = DSLParser()
 
         self.animator.req_step_played.connect(self.step_played)
         self.animator.req_finished.connect(self.animation_finished)
@@ -30,6 +31,7 @@ class StackController(QObject):
         self.view.btn_push.clicked.connect(self.push)
         self.view.btn_pop.clicked.connect(self.pop)
         self.view.btn_reset.clicked.connect(self.reset)
+        self.view.req_dsl_cmd.connect(self.process_dsl_command)
         self.reset()
 
     def step_played(self, step: dict, index: int, total: int):
@@ -221,3 +223,60 @@ class StackController(QObject):
         self.popped_item = None
         self.capacity = 0
         self.view.scene.clear()
+        
+    def process_dsl_command(self, dsl_text: str):
+        if self.animator.is_running():
+            return
+            
+        try:
+            commands = self.dsl_parser.parse(dsl_text)
+            for cmd in commands:
+                self.execute_dsl_command(cmd)
+        except Exception as e:
+            QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
+
+    def execute_dsl_command(self, cmd: dict):
+        command = cmd['command']
+        args = cmd['args']
+        options = cmd['options']
+        flags = cmd['flags']
+
+        if options.get('struct_type') not in ['stck', None]:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return
+            
+        if command == 'create':
+            if len(args) == 1:
+                capacity = args[0]
+                steps = self.model.build_empty(capacity)
+                self.animator.load_steps(steps)
+                self.animator.start()
+            elif len(args) > 1:
+                capacity = args[0]
+                initial_elements = args[1:]
+                steps = self.model.build_empty(capacity)
+                for elem in initial_elements:
+                    steps.extend(self.model.push(elem))
+                self.animator.load_steps(steps)
+                self.animator.start()
+            else:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+
+        elif command == 'insert':
+            if len(args) > 0:
+                value = args[0]
+                steps = self.model.push(value)
+                self.animator.load_steps(steps)
+                self.animator.start()
+            else:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+                
+        elif command == 'delete':
+            steps = self.model.pop()
+            self.animator.load_steps(steps)
+            self.animator.start()
+
+        elif command == 'help':
+            QMessageBox.information(self.view, "帮助", DSL_help)
+        else:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")

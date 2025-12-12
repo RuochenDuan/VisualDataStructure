@@ -2,7 +2,8 @@
 from PyQt6.QtCore import QObject, QPointF
 from PyQt6.QtWidgets import QInputDialog, QFileDialog, QMessageBox, QLineEdit
 from models import HuffmanTree
-from utils import Animator
+from utils import Animator, DSLParser
+from config import DSL_help
 import re
 import json
 import os
@@ -14,6 +15,7 @@ class HuffmanController(QObject):
         self.view = view
         self.model = HuffmanTree()
         self.animator = Animator(interval_ms=180)
+        self.dsl_parser = DSLParser()
 
         self.animator.req_step_played.connect(self.step_played)
         self.animator.req_finished.connect(self.animation_finished)
@@ -21,6 +23,7 @@ class HuffmanController(QObject):
         self.view.btn_save.clicked.connect(self.save)
         self.view.btn_create.clicked.connect(self.create)
         self.view.btn_reset.clicked.connect(self.reset)
+        self.view.req_dsl_cmd.connect(self.process_dsl_command)
         self.reset()
 
     def step_played(self, step: dict, index: int, total: int):
@@ -127,4 +130,38 @@ class HuffmanController(QObject):
         self.animator.stop()
         self.model = HuffmanTree()
         self.view.clear_scene()
+        
+    def process_dsl_command(self, dsl_text: str):
+        if self.animator.is_running():
+            return
+            
+        try:
+            commands = self.dsl_parser.parse(dsl_text)
+            for cmd in commands:
+                self.execute_dsl_command(cmd)
+        except Exception as e:
+            QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
 
+    def execute_dsl_command(self, cmd: dict):
+        command = cmd['command']
+        args = cmd['args']
+        options = cmd['options']
+        flags = cmd['flags']
+
+        if options.get('struct_type') not in ['huff', None]:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return
+            
+        if command == 'create':
+            if len(args) > 0:
+                text = ','.join(str(arg) for arg in args)
+                steps = self.model.build(text)
+                self.animator.load_steps(steps)
+                self.animator.start()
+            else:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+
+        elif command == 'help':
+            QMessageBox.information(self.view, "帮助", DSL_help)
+        else:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")

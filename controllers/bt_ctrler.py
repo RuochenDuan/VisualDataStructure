@@ -2,7 +2,8 @@
 from PyQt6.QtCore import QObject, QPointF
 from PyQt6.QtWidgets import QInputDialog, QFileDialog, QMessageBox, QLineEdit
 from models import BinaryTree
-from utils import Animator
+from utils import Animator, DSLParser
+from config import DSL_help
 import json
 import re
 import os
@@ -15,6 +16,7 @@ class BTController(QObject):
         self.model = BinaryTree()
         self.animator = Animator(interval_ms=180)
         self.selected_node_id = None
+        self.dsl_parser = DSLParser()
 
         self.animator.req_step_played.connect(self.step_played)
         self.animator.req_finished.connect(self.animation_finished)
@@ -24,6 +26,7 @@ class BTController(QObject):
         self.view.btn_insert.clicked.connect(self.insert)
         self.view.btn_delete.clicked.connect(self.delete)
         self.view.btn_reset.clicked.connect(self.reset)
+        self.view.req_dsl_cmd.connect(self.process_dsl_command)
         self.reset()
 
     def node_clicked(self, node_id):
@@ -206,3 +209,77 @@ class BTController(QObject):
         self.model = BinaryTree()
         self.selected_node_id = None
         self.view.clear_scene()
+        
+    def process_dsl_command(self, dsl_text: str):
+        if self.animator.is_running():
+            return
+            
+        try:
+            commands = self.dsl_parser.parse(dsl_text)
+            for cmd in commands:
+                self.execute_dsl_command(cmd)
+        except Exception as e:
+            QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
+
+    def execute_dsl_command(self, cmd: dict):
+        command = cmd['command']
+        args = cmd['args']
+        options = cmd['options']
+        flags = cmd['flags']
+
+        if options.get('struct_type') not in ['bt', None]:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return
+            
+        if command == 'create':
+            if len(args) >= 2:
+                mid = len(args) // 2
+                pre_seq = args[:mid]
+                in_seq = args[mid:]
+                steps = self.model.build(pre_seq, in_seq, None)
+                self.animator.load_steps(steps)
+                self.animator.start()
+            else:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+                
+        elif command == 'insert':
+            if len(args) < 2:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return
+            target_value = args[0]
+            insert_value = args[1]
+            target_node_id = None
+            for node_id, node_item in self.view.node_items.items():
+                if node_item.value == str(target_value):
+                    target_node_id = node_id
+                    break
+            if target_node_id:
+                direction = "left"
+                if "r" in flags:
+                    direction = "right"
+                elif "l" in flags:
+                    direction = "left"
+                steps = self.model.insert_child(target_node_id, insert_value, direction)
+                self.animator.load_steps(steps)
+                self.animator.start()
+                
+        elif command == 'delete':
+            if len(args) == 0:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return
+            target_value = args[0]
+            target_node_id = None
+            for node_id, node_item in self.view.node_items.items():
+                if node_item.value == str(target_value):
+                    target_node_id = node_id
+                    break
+            if target_node_id:
+                steps = self.model.delete_node(target_node_id)
+                if steps:
+                    self.animator.load_steps(steps)
+                    self.animator.start()
+
+        elif command == 'help':
+            QMessageBox.information(self.view, "帮助", DSL_help)
+        else:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")

@@ -3,7 +3,8 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QInputDialog, QFileDialog, QMessageBox, QLineEdit
 from views import ArrListItem
 from models import ArrList
-from utils import Animator
+from utils import Animator, DSLParser
+from config import DSL_help
 import json
 import re
 import os
@@ -17,6 +18,7 @@ class ArrListController(QObject):
         self.animator = Animator(interval_ms=250)
         self.arr_items = {}  # uuid -> ArrListItem
         self.selected_uuid = None
+        self.dsl_parser = DSLParser()
 
         self.animator.req_step_played.connect(self.step_played)
         self.animator.req_finished.connect(self.animation_finished)
@@ -26,6 +28,7 @@ class ArrListController(QObject):
         self.view.btn_insert.clicked.connect(self.insert)
         self.view.btn_delete.clicked.connect(self.delete)
         self.view.btn_reset.clicked.connect(self.reset)
+        self.view.req_dsl_cmd.connect(self.process_dsl_command)
         self.reset()
 
     def node_clicked(self, uuid: str):
@@ -185,3 +188,68 @@ class ArrListController(QObject):
         self.selected_uuid = None
         self.arr_items.clear()
         self.view.scene.clear()
+        
+    def process_dsl_command(self, dsl_text: str):
+        if self.animator.is_running():
+            return
+            
+        try:
+            commands = self.dsl_parser.parse(dsl_text)
+            for cmd in commands:
+                self.execute_dsl_command(cmd)
+        except Exception as e:
+            QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
+
+    def execute_dsl_command(self, cmd: dict):
+        command = cmd['command']
+        args = cmd['args']
+        options = cmd['options']
+        flags = cmd['flags']
+
+        if options.get('struct_type') not in ['alist', None]:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return
+
+        if command == 'create':
+            if len(args) > 0:
+                steps = self.model.build_from_list(args)
+                self.animator.load_steps(steps)
+                self.animator.start()
+            else:
+                self.reset()
+                
+        elif command == 'insert':
+            if len(args) == 0:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return
+            value = args[0]
+            index = None
+            if len(args) >= 2:
+                target_value = args[1]
+                for i, item in enumerate(self.arr_items.values()):
+                    if item.value == target_value:
+                        index = i
+                        break
+            steps = self.model.insert(value, index)
+            self.animator.load_steps(steps)
+            self.animator.start()
+
+        elif command == 'delete':
+            if len(args) == 0:
+                QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return
+            target_value = args[0]
+            target_index = None
+            for i, item in enumerate(sorted(self.arr_items.values(), key=lambda x: x.index)):
+                if item.value == target_value:
+                    target_index = item.index
+                    break
+            if target_index is not None:
+                steps = self.model.delete(target_index)
+                self.animator.load_steps(steps)
+                self.animator.start()
+
+        elif command == 'help':
+            QMessageBox.information(self.view, "帮助", DSL_help)
+        else:
+            QMessageBox.warning(self.view, "警告", "命令语法错误")
