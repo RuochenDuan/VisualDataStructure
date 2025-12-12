@@ -24,20 +24,20 @@ insert -alist x  在线性表末尾插入 x
 insert -alist y x  在线性表中首个等于 y 的元素前插入 x
 delete -alist x  删除线性表中首个等于 x 的元素
 create -nlist v1,v2,...  创建链表 [v1, v2, ...]
-insert -nlist x  在链表头部插入 x（头插法）
+insert -nlist x  在链表头部插入 x
 insert -nlist y x  在链表中首个等于 y 的节点后插入 x
 delete -nlist x  删除链表中首个等于 x 的节点
 create -stck n  创建容量为 n 的空栈
-create -stck n v1,v2,...  创建栈，初始元素为 v1,v2,...（从栈底到栈顶），其余位置为 None，总长度为 n
+create -stck n v1,v2,...  创建总长度为 n 的栈，初始元素从栈底到栈顶为 v1,v2,... ，其余位置为 None
 insert -stck x  将 x 压入栈顶
 delete -stck  弹出栈顶元素
-create -bt pre_seq,in_seq  根据前序遍历 pre_seq 和中序遍历 in_seq（均为逗号分隔的值）构建二叉树
+create -bt pre in  根据前序遍历 pre 和中序遍历 in 序列构建二叉树
 insert -bt x --l y  在二叉树中按 BFS 顺序找到首个值为 x 的节点，在其左子位置插入 y
 insert -bt x --r y  在二叉树中按 BFS 顺序找到首个值为 x 的节点，在其右子位置插入 y
 delete -bt x  在二叉树中按 BFS 顺序找到首个值为 x 的节点，删除该节点及其子树
 create -bst v1,v2,...  按顺序插入 v1,v2,... 构造二叉搜索树
 insert -bst x  在二叉搜索树中插入 x
-search -bst x  在二叉搜索树中查找 x，返回是否存在
+search -bst x  在二叉搜索树中查找 x
 delete -bst x  在二叉搜索树中删除值为 x 的节点
 create -huff s  根据字符串 s 中各字符的出现频率构建哈夫曼树
 """
