@@ -195,8 +195,14 @@ class ArrListController(QObject):
             
         try:
             commands = self.dsl_parser.parse(dsl_text)
+            all_steps = []
             for cmd in commands:
-                self.execute_dsl_command(cmd)
+                steps = self.execute_dsl_command(cmd)
+                if steps:
+                    all_steps.extend(steps)
+            if all_steps:
+                self.animator.load_steps(all_steps)
+                self.animator.start()
         except Exception as e:
             QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
 
@@ -208,20 +214,20 @@ class ArrListController(QObject):
 
         if options.get('struct_type') not in ['alist', None]:
             QMessageBox.warning(self.view, "警告", "命令语法错误")
-            return
+            return []
 
         if command == 'create':
             if len(args) > 0:
                 steps = self.model.build_from_list(args)
-                self.animator.load_steps(steps)
-                self.animator.start()
+                return steps
             else:
                 self.reset()
+                return []
                 
         elif command == 'insert':
             if len(args) == 0:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
-                return
+                return []
             value = args[0]
             index = None
             if len(args) >= 2:
@@ -231,13 +237,12 @@ class ArrListController(QObject):
                         index = i
                         break
             steps = self.model.insert(value, index)
-            self.animator.load_steps(steps)
-            self.animator.start()
+            return steps
 
         elif command == 'delete':
             if len(args) == 0:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
-                return
+                return []
             target_value = args[0]
             target_index = None
             for i, item in enumerate(sorted(self.arr_items.values(), key=lambda x: x.index)):
@@ -246,10 +251,12 @@ class ArrListController(QObject):
                     break
             if target_index is not None:
                 steps = self.model.delete(target_index)
-                self.animator.load_steps(steps)
-                self.animator.start()
+                return steps
+            return []
 
         elif command == 'help':
             QMessageBox.information(self.view, "帮助", DSL_help)
+            return []
         else:
             QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return []

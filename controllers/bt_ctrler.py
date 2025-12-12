@@ -216,8 +216,14 @@ class BTController(QObject):
             
         try:
             commands = self.dsl_parser.parse(dsl_text)
+            all_steps = []
             for cmd in commands:
-                self.execute_dsl_command(cmd)
+                steps = self.execute_dsl_command(cmd)
+                if steps:
+                    all_steps.extend(steps)
+            if all_steps:
+                self.animator.load_steps(all_steps)
+                self.animator.start()
         except Exception as e:
             QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
 
@@ -229,23 +235,23 @@ class BTController(QObject):
 
         if options.get('struct_type') not in ['bt', None]:
             QMessageBox.warning(self.view, "警告", "命令语法错误")
-            return
-            
+            return []
+
         if command == 'create':
             if len(args) >= 2:
                 mid = len(args) // 2
                 pre_seq = args[:mid]
                 in_seq = args[mid:]
                 steps = self.model.build(pre_seq, in_seq, None)
-                self.animator.load_steps(steps)
-                self.animator.start()
+                return steps
             else:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return []
                 
         elif command == 'insert':
             if len(args) < 2:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
-                return
+                return []
             target_value = args[0]
             insert_value = args[1]
             target_node_id = None
@@ -260,13 +266,13 @@ class BTController(QObject):
                 elif "l" in flags:
                     direction = "left"
                 steps = self.model.insert_child(target_node_id, insert_value, direction)
-                self.animator.load_steps(steps)
-                self.animator.start()
-                
+                return steps
+            return []
+            
         elif command == 'delete':
             if len(args) == 0:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
-                return
+                return []
             target_value = args[0]
             target_node_id = None
             for node_id, node_item in self.view.node_items.items():
@@ -275,11 +281,12 @@ class BTController(QObject):
                     break
             if target_node_id:
                 steps = self.model.delete_node(target_node_id)
-                if steps:
-                    self.animator.load_steps(steps)
-                    self.animator.start()
+                return steps if steps else []
+            return []
 
         elif command == 'help':
             QMessageBox.information(self.view, "帮助", DSL_help)
+            return []
         else:
             QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return []

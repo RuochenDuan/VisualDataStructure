@@ -230,8 +230,14 @@ class StackController(QObject):
             
         try:
             commands = self.dsl_parser.parse(dsl_text)
+            all_steps = []
             for cmd in commands:
-                self.execute_dsl_command(cmd)
+                steps = self.execute_dsl_command(cmd)
+                if steps:
+                    all_steps.extend(steps)
+            if all_steps:
+                self.animator.load_steps(all_steps)
+                self.animator.start()
         except Exception as e:
             QMessageBox.warning(self.view, "警告", f"命令解析失败: {str(e)}")
 
@@ -243,40 +249,40 @@ class StackController(QObject):
 
         if options.get('struct_type') not in ['stck', None]:
             QMessageBox.warning(self.view, "警告", "命令语法错误")
-            return
-            
+            return []
+
         if command == 'create':
             if len(args) == 1:
                 capacity = args[0]
                 steps = self.model.build_empty(capacity)
-                self.animator.load_steps(steps)
-                self.animator.start()
+                return steps
             elif len(args) > 1:
                 capacity = args[0]
                 initial_elements = args[1:]
                 steps = self.model.build_empty(capacity)
                 for elem in initial_elements:
                     steps.extend(self.model.push(elem))
-                self.animator.load_steps(steps)
-                self.animator.start()
+                return steps
             else:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return []
 
         elif command == 'insert':
             if len(args) > 0:
                 value = args[0]
                 steps = self.model.push(value)
-                self.animator.load_steps(steps)
-                self.animator.start()
+                return steps
             else:
                 QMessageBox.warning(self.view, "警告", "命令语法错误")
+                return []
                 
         elif command == 'delete':
             steps = self.model.pop()
-            self.animator.load_steps(steps)
-            self.animator.start()
+            return steps
 
         elif command == 'help':
             QMessageBox.information(self.view, "帮助", DSL_help)
+            return []
         else:
             QMessageBox.warning(self.view, "警告", "命令语法错误")
+            return []
