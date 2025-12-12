@@ -14,32 +14,32 @@ COLORS = {
 }
 
 DSL_help = """
-DSL语法
+VisualDS语法规范  by RuochenDuan
 关键字：create, insert, delete, search, help, alist, nlist, stck, bt, bst, huff, l, r
-字面量：整型，字符串均与python中的表达一致
-分隔符：";"分隔命令，","分隔参数，"-"和"--"连接参数，一条命令内部不能忽略空格，命令之间可以忽略空格，不支持注释
-具体解释：
-create -alist 1,2,3 创建一个线性表[1,2,3]
-insert -alist 4 在线性表的末尾插入4
-insert -alist 1 4 在线性表遍历匹配的第一个1前面插入4
-delete -alist 1 删除线性表中遍历匹配的第一个1
-create -nlist 1,2,3 创建一个链表[1,2,3]
-insert -nlist 4 头插法插入4
-insert -nlist 1 4 在链表遍历匹配的第一个1后面插入4
-delete -nlist 1 删除链表中遍历匹配的第一个1
-create -stck 5 创建一个容量为5的栈
-create -stck 5 1,2,3 创建一个栈[1,2,3,None,None]
-insert -stck 4 向栈中压入4
-delete -stck 弹出栈顶元素
-create -bt 1,3,6,0 1,0,6,3 创建一个前、中序序列分别为1，3，6，0和1，0，6，3的二叉树
-insert -bt 1 --l 4 在二叉树中由BFS遍历匹配的第一个1的左侧插入4
-insert -bt 1 --r 4 在二叉树中由BFS遍历匹配的第一个1的右侧插入4
-delete -bt 4 删除二叉树中由BFS遍历匹配的第一个4
-create -bst 1,2,3 创建一个由1，2，3构造的二叉搜索树
-insert -bst 4 向二叉搜索树中插入4
-search -bst 1 在二叉搜索树中查找1
-delete -bst 1 删除二叉搜索树中的1
-create -huff aaaabbbccd 创建一个由aaaabbbccd构建的哈夫曼树
+字面量：整型、字符串，语法与Python一致
+分隔符：命令间用分号;分隔，可省略空白；参数用,分隔；选项用-引导；命令内部空格不可省略
+命令定义：
+create -alist v1,v2,...  创建线性表 [v1, v2, ...]
+insert -alist x  在线性表末尾插入 x
+insert -alist y x  在线性表中首个等于 y 的元素前插入 x
+delete -alist x  删除线性表中首个等于 x 的元素
+create -nlist v1,v2,...  创建链表 [v1, v2, ...]
+insert -nlist x  在链表头部插入 x（头插法）
+insert -nlist y x  在链表中首个等于 y 的节点后插入 x
+delete -nlist x  删除链表中首个等于 x 的节点
+create -stck n  创建容量为 n 的空栈
+create -stck n v1,v2,...  创建栈，初始元素为 v1,v2,...（从栈底到栈顶），其余位置为 None，总长度为 n
+insert -stck x  将 x 压入栈顶
+delete -stck  弹出栈顶元素
+create -bt pre_seq,in_seq  根据前序遍历 pre_seq 和中序遍历 in_seq（均为逗号分隔的值）构建二叉树
+insert -bt x --l y  在二叉树中按 BFS 顺序找到首个值为 x 的节点，在其左子位置插入 y
+insert -bt x --r y  在二叉树中按 BFS 顺序找到首个值为 x 的节点，在其右子位置插入 y
+delete -bt x  在二叉树中按 BFS 顺序找到首个值为 x 的节点，删除该节点及其子树
+create -bst v1,v2,...  按顺序插入 v1,v2,... 构造二叉搜索树
+insert -bst x  在二叉搜索树中插入 x
+search -bst x  在二叉搜索树中查找 x，返回是否存在
+delete -bst x  在二叉搜索树中删除值为 x 的节点
+create -huff s  根据字符串 s 中各字符的出现频率构建哈夫曼树
 """
 
 ERR = {
