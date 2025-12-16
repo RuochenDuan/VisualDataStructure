@@ -254,7 +254,7 @@ class BSTController(QObject):
                 return []
 
         elif command == 'help':
-            QMessageBox.information(self.view, "帮助", DSL_help)
+            QMessageBox.information(self.view, "帮助", f"<pre>{DSL_help}</pre>")
             return []
         else:
             QMessageBox.warning(self.view, "警告", "命令语法错误")

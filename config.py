@@ -15,10 +15,12 @@ COLORS = {
 
 DSL_help = """
 VisualDS语法规范  by RuochenDuan
-关键字：create, insert, delete, search, help, alist, nlist, stck, bt, bst, huff, l, r
+关键字：create, insert, delete, search, help, alist, nlist,
+ stck, bt, bst, huff, l, r
 字面量：整型、字符串，语法与Python一致
-分隔符：命令间用分号;分隔，可省略空白；参数用,分隔；选项用-引导；命令内部空格不可省略
-命令定义：
+分隔符：命令间用分号;分隔，可省略空白；参数用,分隔；选项用-引导；
+命令内部空格不可省略
+格式：[cmd] -[type] [args] [optional args] --[flag];
 create -alist v1,v2,...  创建线性表 [v1, v2, ...]
 insert -alist x  在线性表末尾插入 x
 insert -alist y x  在线性表中首个等于 y 的元素前插入 x
@@ -28,13 +30,17 @@ insert -nlist x  在链表头部插入 x
 insert -nlist y x  在链表中首个等于 y 的节点后插入 x
 delete -nlist x  删除链表中首个等于 x 的节点
 create -stck n  创建容量为 n 的空栈
-create -stck n v1,v2,...  创建总长度为 n 的栈，初始元素从栈底到栈顶为 v1,v2,... ，其余位置为 None
+create -stck n v1,v2,...  创建总长度为 n 的栈，初始元素从
+栈底到栈顶为 v1,v2,... ，其余位置为 None
 insert -stck x  将 x 压入栈顶
 delete -stck  弹出栈顶元素
 create -bt pre in  根据前序遍历 pre 和中序遍历 in 序列构建二叉树
-insert -bt x --l y  在二叉树中按 BFS 顺序找到首个值为 x 的节点，在其左子位置插入 y
-insert -bt x --r y  在二叉树中按 BFS 顺序找到首个值为 x 的节点，在其右子位置插入 y
-delete -bt x  在二叉树中按 BFS 顺序找到首个值为 x 的节点，删除该节点及其子树
+insert -bt x --l y  在二叉树中按 BFS 顺序找到首个值为 x 的
+节点，在其左子位置插入 y
+insert -bt x --r y  在二叉树中按 BFS 顺序找到首个值为 x 的
+节点，在其右子位置插入 y
+delete -bt x  在二叉树中按 BFS 顺序找到首个值为 x 的节点，删除
+该节点及其子树
 create -bst v1,v2,...  按顺序插入 v1,v2,... 构造二叉搜索树
 insert -bst x  在二叉搜索树中插入 x
 search -bst x  在二叉搜索树中查找 x
