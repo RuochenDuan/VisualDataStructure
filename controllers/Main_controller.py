@@ -7,6 +7,7 @@ from controllers import BTController
 from controllers import BSTController
 from controllers import HuffmanController
 import os
+from config import URL, MODEL, S_PROMPT, MAPPING
 from openai import OpenAI
 import httpx
 
@@ -15,8 +16,8 @@ class MainController:
     def __init__(self, window):
         self.window = window
         self.api_key = os.getenv("DASHSCOPE_API_KEY")
-        self.url = "https://dashscope.aliyuncs.com/compatible-mode/v1/"
-        self.chat_model = "qwen-turbo"
+        self.url = URL
+        self.chat_model = MODEL
         self.http_client = None
         self.client = None
         self.client_init()
@@ -76,47 +77,8 @@ class MainController:
         )
         if not ok or not prompt:
             return
-        mapping = {
-            "1": """
-                你要模拟一个顺序表可视系统的后端，严格遵守以下要求。
-                接收：用户用自然语言描述的顺序表。
-                返回：单行，只有一个python列表格式表示的表结构，不要有多余内容。
-                返回示例：[1, 2, 3, 4]
-                """,
-            "2": """
-                你要模拟一个链表可视系统的后端，严格遵守以下要求。
-                接收：用户用自然语言描述的链表。
-                返回：单行，只有一个python列表格式表示的表结构，不要有多余内容。
-                返回示例：[1, 2, 3, 4]
-                """,
-            "3": """
-                你要模拟一个栈可视系统的后端，严格遵守以下要求。
-                接收：用户用自然语言描述的栈。
-                返回：单行，只有一个python字典格式表示的栈结构，不要有多余内容。
-                    第一个值描述总容量，第二个值描述压入的元素（栈底在左侧）。
-                返回示例：{"max_size": 5, "datas": [1, 2, 3, 4]}
-                """,
-            "4": """
-                你要模拟一个二叉树可视系统的后端，严格遵守以下要求。
-                接收：用户用自然语言描述的二叉树。
-                返回：单行，只有一个python字典格式表示的构建序列，不要有多余内容。
-                    第一个值是前序序列，第二个值是中序序列。
-                返回示例：{"preorder": [1, 2, 4, 5, 3, 6], "inorder": [4, 2, 5, 1, 6, 3]}
-                """,
-            "5": """
-                你要模拟一个二叉搜索树可视系统的后端，严格遵守以下要求。
-                接收：用户用自然语言描述的二叉搜索树。
-                返回：单行，只有一个python列表格式表示的构建序列，不要有多余内容。
-                返回示例：[1, 2, 3, 4, 5]
-                """,
-            "6": """
-                你要模拟一个哈夫曼树可视系统的后端，严格遵守以下要求。
-                接收：用户用自然语言描述的哈夫曼树。
-                返回：单行，只有一个python字典格式表示的构建序列，包含构建这个树的原始字符串，不要有多余内容。
-                返回示例：{"chars": "aaaabbbccd"}
-                """
-        }
-        system_prompt = mapping.get(index, "")
+
+        system_prompt = S_PROMPT[int(index)]
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -148,8 +110,7 @@ class MainController:
             self.huffman_ctrler.dscrb(res)
 
     def get_page(self, page_name):
-        mapping = {"顺序表": 1, "链表": 2, "栈": 3, "二叉树": 4, "二叉搜索树": 5, "哈夫曼树": 6}
-        self.window.pages_switch(mapping.get(page_name, 0))
+        self.window.pages_switch(MAPPING.get(page_name, 0))
 
     def back_to_home(self):
         self.window.pages_switch(0)

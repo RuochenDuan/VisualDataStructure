@@ -107,6 +107,9 @@ class BTController(QObject):
     def dscrb(self, res):
         if self.animator.is_running() or not res:
             return
+        if res == "error":
+            QMessageBox.warning(self.view, "警告", f"你描述的不是二叉树！")
+            return
         res = json.loads(res)
         pre_seq, in_seq = res.values()
         post_seq = None

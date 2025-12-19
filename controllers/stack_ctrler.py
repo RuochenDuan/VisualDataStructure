@@ -88,6 +88,9 @@ class StackController(QObject):
     def dscrb(self, res):
         if self.animator.is_running() or not res:
             return
+        if res == "error":
+            QMessageBox.warning(self.view, "警告", f"你描述的不是栈！")
+            return
         res = json.loads(res)
         size, datas = res.values()
         steps = self.model.build_empty(size)
