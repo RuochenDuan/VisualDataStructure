@@ -19,6 +19,8 @@ URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/"
 
 MODEL = "qwen-turbo"
 
+API_KEY = "DASHSCOPE_API_KEY"
+
 S_PROMPT = {
         1: """
             你要模拟一个顺序表可视系统的后端，严格遵守以下要求。

@@ -7,7 +7,7 @@ from controllers import BTController
 from controllers import BSTController
 from controllers import HuffmanController
 import os
-from config import URL, MODEL, S_PROMPT, MAPPING
+from config import URL, MODEL, S_PROMPT, MAPPING, API_KEY
 from openai import OpenAI
 import httpx
 
@@ -15,7 +15,7 @@ import httpx
 class MainController:
     def __init__(self, window):
         self.window = window
-        self.api_key = os.getenv("DASHSCOPE_API_KEY")
+        self.api_key = os.getenv(API_KEY)
         self.url = URL
         self.chat_model = MODEL
         self.http_client = None
